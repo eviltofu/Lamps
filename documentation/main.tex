@@ -1,0 +1,142 @@
+\documentclass[10pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{a4paper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\usepackage{minted}
+
+\setminted[swift]{
+	autogobble, 
+	linenos, 
+	numberblanklines=false, 
+	xleftmargin=1em,
+	tabsize=2,
+	fontsize=\footnotesize
+}
+
+\title{Lamps \\ GUI Testing View Controllers in Xcode}
+\author{Jerome Chan}
+\date{\today}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+The main purpose of this project is to demonstrate a simple way of setting up individual View Controllers for user interface testing purposes.
+
+\section{Application}
+The application consists of a main screen with three tabs that only display different background colors and a PassCodeViewController.
+
+\subsection{PassCodeViewController}
+The PassCodeViewController has three functions: create a passcode, validate a passcode, and edit a passcode. We will test each of these functions individually.
+
+\section{Setting up tests}
+Data needs  to pass from the XCTestCase to the running application so that the running application knows how to set up the view controller for testing. This is done by storing the relevant data in the  launch environment by the XCTestCase and retrieving by the app's scene delegate.
+
+\subsection{Setting up}
+\begin{minted}{swift}
+let app = XCUIApplication()
+app.launchEnvironment[TestLauncher.TestPhrase] = "ON"
+app.launchEnvironment[TestLauncher.VCPhrase] = 
+    TestLauncherViewControllers.PassCode.rawValue
+app.launchEnvironment[TestLauncher.ModelPhrase] = 
+    TestLauncherModels.PassCode1.rawValue
+\end{minted}
+
+\subsection{Retrieving}
+\begin{minted}{swift}
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        // Called as the scene transitions from the background to the foreground.
+        // Use this method to undo the changes made on entering the background.
+
+        if let vc = TestLauncher.viewController() {
+            window?.rootViewController?.show(vc, sender: nil)
+        }
+    }
+\end{minted}
+
+\section{TestLauncher}
+
+The TestLauncher is used to store the keywords for the launch environment as well as the code to retrieve 
+
+\begin{minted}{swift}
+enum TestLauncher {
+    static let TestPhrase = "TestLauncher-testing"
+    static let VCPhrase = "TestLauncher-VC"
+    static let ModelPhrase = "TestLauncher-model"
+}
+\end{minted}
+
+\begin{minted}{swift}
+extension TestLauncher {
+    static func isTestModeOn() -> Bool {
+        return ProcessInfo.processInfo.environment.keys.contains(TestLauncher.TestPhrase)
+    }
+    static func vcPhrase() -> String? {
+        return ProcessInfo.processInfo.environment[TestLauncher.VCPhrase]
+    }
+    static func modelPhrase() -> String? {
+        return ProcessInfo.processInfo.environment[TestLauncher.ModelPhrase]
+    }
+    static func storyboard() -> UIStoryboard? {
+        if let sb = TestLauncherViewControllers(rawValue:  vcPhrase() ?? "") {
+            return sb.storyboard
+        } else {
+            return nil
+        }
+    }
+    static func viewController() -> UIViewController? {
+        if
+            let vcPhrase = TestLauncher.vcPhrase(),
+            let modelPhrase = TestLauncher.modelPhrase(),
+            let vcEnum = TestLauncherViewControllers(rawValue: vcPhrase),
+            let modelEnum = TestLauncherModels(rawValue: modelPhrase),
+            let vc = TestLauncher.storyboard()?.instantiateInitialViewController() {
+            switch vcEnum {
+            case .PassCode:
+                if
+                    let vc = vc as? PassCodeViewController {
+                    switch modelEnum {
+                    case .PassCode1:
+                        vc.model = PassCodeModel(passCodeString: "yishuntoapayoh")
+                        vc.mode = .createPassCode
+                    case .PassCode2:
+                        vc.model = PassCodeModel(passCodeString: "parislondon")
+                        vc.mode = .validatePassCode
+                    case .PassCode3:
+                        vc.model = PassCodeModel(passCodeString: "marsvenus")
+                        vc.mode = .editPassCode
+                    }
+                }
+            }
+            return vc
+        } else {
+            return nil
+        }
+    }
+}
+\end{minted}
+
+\section{TestLauncherViewControllers}
+This stores the different view controllers that are to be tested.
+\begin{minted}{swift}
+enum TestLauncherViewControllers: String {
+    case PassCode = "PassCodeViewController"
+}
+\end{minted}
+
+\section{TestLauncherModels}
+This stores the different modesl the view controllers need for testing.
+\begin{minted}{swift}
+enum TestLauncherModels: String {
+    case PassCode1 = "PassCodeModel1"
+    case PassCode2 = "PassCodeModel2"
+    case PassCode3 = "PassCodeModel3"
+}
+\end{minted}
+
+\end{document}  

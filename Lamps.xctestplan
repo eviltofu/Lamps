@@ -1,0 +1,36 @@
+{
+  "configurations" : [
+    {
+      "id" : "E38503DA-CCF4-44EB-8066-682ABCB1FAE8",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Lamps.xcodeproj",
+      "identifier" : "020680082A317CBF006B2D4A",
+      "name" : "Lamps"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Lamps.xcodeproj",
+        "identifier" : "0206801E2A317CC0006B2D4A",
+        "name" : "LampsTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Lamps.xcodeproj",
+        "identifier" : "020680282A317CC0006B2D4A",
+        "name" : "LampsUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
